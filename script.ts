@@ -7,6 +7,9 @@ export enum PlayerSigns {
 
 export let gameActive = true;
 export let currentPlayer = PlayerSigns.X;
+export function setCurrentPlayer(player: PlayerSigns) {
+  currentPlayer = player
+}
 export let gameState = ["", "", "", "", "", "", "", "", ""];
 
 export const winningMessage = () => `Player ${currentPlayer} has won!`;
@@ -41,6 +44,8 @@ export const handlePlayerChange = () => {
   /* This function changes currentPlayer after each turn */
   currentPlayer =
     currentPlayer === PlayerSigns.X ? PlayerSigns.O : PlayerSigns.X;
+  console.log(statusDisplay)
+  console.log(document.documentElement.outerHTML)
   statusDisplay.innerHTML = currentPlayerTurn();
 };
 

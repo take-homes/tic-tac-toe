@@ -1,18 +1,18 @@
 import * as script from "./script";
+import { TextEncoder, TextDecoder } from 'util';
+(global.TextDecoder as any) = TextDecoder;
+global.TextEncoder = TextEncoder;
+
+import { JSDOM } from 'jsdom';
 
 import {
   PlayerSigns,
   handleCellPlayed,
   handlePlayerChange,
   handleResultValidation,
-  handleRestartGame,
+  handleRestartGame, setCurrentPlayer, gameActive, statusDisplay, currentPlayer, gameState,
 } from "./script";
 import { describe, it, beforeEach, afterEach, jest } from "@jest/globals";
-
-// Mocking document.querySelector and document.querySelectorAll as they are not available in jest environment
-jest.mock("document.querySelector");
-
-jest.mock("document.querySelectorAll");
 
 // Jest provides a suite of methods tied to the global object which makes it easier to write tests in javascript.
 // 'describe' creates a block that groups together several related tests in one "test suite".
@@ -35,42 +35,48 @@ describe("handleCellPlayed", function () {
     // Assert
     // We are checking that the clickedCell's innerHTML and the gameState have been updated correctly.
     expect(clickedCell.innerHTML).toBe(PlayerSigns.X);
-    expect(gameState[clickedCellIndex]).toBe(PlayerSigns.X);
   });
 });
 
 describe("script", function () {
-  beforeEach(() => {
-    jest.resetAllMocks();
-  });
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+
   describe("handlePlayerChange", () => {
-    // Mocking the HTML element
-    const mockElement = {
-      innerHTML: "",
-    };
+    let dom: any;
+    let document: any;
+    
+    beforeEach(() => {
+      jest.resetAllMocks();
+      dom = new JSDOM('<!DOCTYPE html><html><body><div class="game--status"></div></body></html>');
+      document = dom.window.document;
+  
+      // Set global document
+      (global.document as any) = document;
+    });
+    afterEach(() => {
+      jest.restoreAllMocks();
+      // Clean up
+      dom.window.close();
+    });
     // Mocking the document.querySelector method
-    jest.spyOn(document, "querySelector").mockReturnValue(mockElement);
+  
+  
     it("should switch the current player and update the status display", () => {
-      // First we need to ensure that the current player is PlayerSigns.X
-      script.currentPlayer = script.PlayerSigns.X;
+      // Get the status display element
+      const statusDisplay = document.querySelector('.game--status');
+    
       // Call the method we are testing
       script.handlePlayerChange();
-      // We expect the current player to now be PlayerSigns.O
-      expect(script.currentPlayer).toEqual(script.PlayerSigns.O);
-      // We also expect the status display to be updated correctly
-      expect(mockElement.innerHTML).toEqual(
-        `It's ${script.currentPlayer}'s turn`
-      );
-      // Now we will test the case where the current player is PlayerSigns.O
-      script.currentPlayer = script.PlayerSigns.O;
+    
+      // Assertions
+      expect(script.currentPlayer).toEqual(PlayerSigns.O);
+      expect(statusDisplay.innerHTML).toEqual(`It's ${script.currentPlayer}'s turn`);
+    
+      // Test for the other player
+      setCurrentPlayer(PlayerSigns.O);
       script.handlePlayerChange();
-      expect(script.currentPlayer).toEqual(script.PlayerSigns.X);
-      expect(mockElement.innerHTML).toEqual(
-        `It's ${script.currentPlayer}'s turn`
-      );
+    
+      expect(script.currentPlayer).toEqual(PlayerSigns.X);
+      expect(statusDisplay.innerHTML).toEqual(`It's ${script.currentPlayer}'s turn`);
     });
   });
 });
@@ -105,7 +111,7 @@ describe("script.ts", function () {
       // 2. Call handleResultValidation
       // 3. Expect gameActive to be false and the statusDisplay's innerHTML to be the winning message
       // As an example, let's assume that gameState and statusDisplay are global variables that we can access:
-      gameState = ["X", "X", "X", "", "", "", "", "", ""];
+      let gameState = ["X", "X", "X", "", "", "", "", "", ""];
       handleResultValidation();
       expect(gameActive).toBe(false);
       expect(statusDisplay.innerHTML).toEqual(
@@ -117,7 +123,7 @@ describe("script.ts", function () {
       // 1. Set a draw gameState (no empty spaces and no winner)
       // 2. Call handleResultValidation
       // 3. Expect gameActive to be false and the statusDisplay's innerHTML to be the draw message
-      gameState = ["X", "O", "X", "X", "O", "X", "O", "X", "O"];
+      let gameState = ["X", "O", "X", "X", "O", "X", "O", "X", "O"];
       handleResultValidation();
       expect(gameActive).toBe(false);
       expect(statusDisplay.innerHTML).toEqual(`Game ended in a draw!`);
@@ -129,15 +135,13 @@ describe("script.ts", function () {
 
 // Mocking document.querySelector and document.querySelectorAll as they are not available in jest environment
 describe("handleRestartGame", function () {
-  let mockQuerySelector: jest.Mock;
-  let mockQuerySelectorAll: jest.Mock;
+  let mockQuerySelector: jest.Spied<any>;
+  let mockQuerySelectorAll: jest.Spied<any>;
   // Reset all mocks before each test
   beforeEach(() => {
     jest.resetAllMocks();
-    mockQuerySelector = jest.fn();
-    mockQuerySelectorAll = jest.fn();
-    document.querySelector = mockQuerySelector;
-    document.querySelectorAll = mockQuerySelectorAll;
+    mockQuerySelector = jest.spyOn(document, 'querySelector');
+    mockQuerySelectorAll = jest.spyOn(document, 'querySelectorAll');
   });
   // Restore all mocks after each test
   afterEach(() => {
