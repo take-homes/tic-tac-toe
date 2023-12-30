@@ -1,16 +1,21 @@
 import * as script from "./script";
-import { TextEncoder, TextDecoder } from 'util';
+import { TextEncoder, TextDecoder } from "util";
 (global.TextDecoder as any) = TextDecoder;
 global.TextEncoder = TextEncoder;
 
-import { JSDOM } from 'jsdom';
+import { JSDOM } from "jsdom";
 
 import {
   PlayerSigns,
   handleCellPlayed,
   handlePlayerChange,
   handleResultValidation,
-  handleRestartGame, setCurrentPlayer, gameActive, statusDisplay, currentPlayer, gameState,
+  handleRestartGame,
+  setCurrentPlayer,
+  gameActive,
+  statusDisplay,
+  currentPlayer,
+  gameState,
 } from "./script";
 import { describe, it, beforeEach, afterEach, jest } from "@jest/globals";
 
@@ -39,16 +44,17 @@ describe("handleCellPlayed", function () {
 });
 
 describe("script", function () {
-
   describe("handlePlayerChange", () => {
     let dom: any;
     let document: any;
-    
+
     beforeEach(() => {
       jest.resetAllMocks();
-      dom = new JSDOM('<!DOCTYPE html><html><body><div class="game--status"></div></body></html>');
+      dom = new JSDOM(
+        '<!DOCTYPE html><html><body><div class="game--status"></div></body></html>'
+      );
       document = dom.window.document;
-  
+
       // Set global document
       (global.document as any) = document;
     });
@@ -58,25 +64,28 @@ describe("script", function () {
       dom.window.close();
     });
     // Mocking the document.querySelector method
-  
-  
+
     it("should switch the current player and update the status display", () => {
       // Get the status display element
-      const statusDisplay = document.querySelector('.game--status');
-    
+      const statusDisplay = document.querySelector(".game--status");
+
       // Call the method we are testing
       script.handlePlayerChange();
-    
+
       // Assertions
       expect(script.currentPlayer).toEqual(PlayerSigns.O);
-      expect(statusDisplay.innerHTML).toEqual(`It's ${script.currentPlayer}'s turn`);
-    
+      expect(statusDisplay.innerHTML).toEqual(
+        `It's ${script.currentPlayer}'s turn`
+      );
+
       // Test for the other player
       setCurrentPlayer(PlayerSigns.O);
       script.handlePlayerChange();
-    
+
       expect(script.currentPlayer).toEqual(PlayerSigns.X);
-      expect(statusDisplay.innerHTML).toEqual(`It's ${script.currentPlayer}'s turn`);
+      expect(statusDisplay.innerHTML).toEqual(
+        `It's ${script.currentPlayer}'s turn`
+      );
     });
   });
 });
@@ -140,8 +149,8 @@ describe("handleRestartGame", function () {
   // Reset all mocks before each test
   beforeEach(() => {
     jest.resetAllMocks();
-    mockQuerySelector = jest.spyOn(document, 'querySelector');
-    mockQuerySelectorAll = jest.spyOn(document, 'querySelectorAll');
+    mockQuerySelector = jest.spyOn(document, "querySelector");
+    mockQuerySelectorAll = jest.spyOn(document, "querySelectorAll");
   });
   // Restore all mocks after each test
   afterEach(() => {
